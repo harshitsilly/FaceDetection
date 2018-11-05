@@ -11,6 +11,21 @@ import Particles from 'react-particles-js';
 import 'tachyons';
 import Clarifai from 'clarifai';
 
+const initialState = {
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+    id: '125',
+    name: '',
+    email: '',
+    entries: 0,
+    password: '',
+    joined: ''
+  }
+};
 const app = new Clarifai.App({
  apiKey: '27469a6f2bba40cd8f5abe881176b04d'
 });
@@ -29,13 +44,20 @@ const particlesOptions = {
 class App extends Component {
   constructor(){
     super();
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false
-    }
+    this.state = initialState;
+  }
+  
+  loadUser = (_user) =>{
+    this.setState({
+      user: {
+        id: _user.id,
+        name: _user.name,
+        email: _user.email,
+        entries: _user.entries,
+        password: _user.password,
+        joined: _user.joined
+      }
+    });
   }
   calculateFaceLocation = (data) => {
     const clerifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
@@ -53,11 +75,34 @@ class App extends Component {
     this.setState({input: event.target.value});
   }
 
-  onButtonSubmit = () => {
+  onPictureSubmit = () => {
     const {input} = this.state;
     this.setState({imageUrl: input});
     app.models.predict(Clarifai.FACE_DETECT_MODEL, input)
       .then(response => {
+        if(response) {
+          fetch('http://localhost:3000/image', {
+            method: 'put',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          })
+          .then(response => {
+            if(response.status === 200) {
+              return response.json();
+            } else {
+              throw new Error('ERROOOOOOOOOOOORRRRR');
+            }
+          }).then(count => {
+            this.setState(Object.assign(this.state.user, {entries: count}));
+          })
+          .catch(err => {
+            console.log(err);
+          })
+        }
         this.setState({box: this.calculateFaceLocation(response)});
       })
       .catch(err => console.log(err));
@@ -65,7 +110,7 @@ class App extends Component {
 
   onRouteChange = (route) => {
     if(route === 'signout') {
-      this.setState({isSignedIn: false});
+      this.setState(initialState);
     } else if (route === 'home') {
       this.setState({isSignedIn: true});
     }
@@ -73,7 +118,7 @@ class App extends Component {
   }
 
   render() {
-    const {isSignedIn, box, route, imageUrl} = this.state;
+    const {isSignedIn, box, route, imageUrl, user} = this.state;
     return (
       <div className="App">
         <Particles className = 'particles'
@@ -86,10 +131,13 @@ class App extends Component {
         {route === 'home' 
           ? <div>
               <Logo/>
-              <Rank/>
+              <Rank 
+                name={this.state.user.name} 
+                entries={this.state.user.entries}
+              />
               <ImageLinkForm 
                 onInputChange = {this.onInputChange} 
-                onButtonSubmit = {this.onButtonSubmit}
+                onPictureSubmit = {this.onPictureSubmit}
               />
               <FaceRecognation 
                 imageUrl = {imageUrl}
@@ -97,8 +145,14 @@ class App extends Component {
               />
           </div>
           : ((route === 'signin' || route === 'signout')
-            ? <Signin onRouteChange = {this.onRouteChange}/>
-            : <Register onRouteChange = {this.onRouteChange}/>)
+            ? <Signin 
+              onRouteChange = {this.onRouteChange}
+              loadUser = {this.loadUser}
+            />
+            : <Register 
+                onRouteChange = {this.onRouteChange}
+                loadUser = {this.loadUser}
+              />)
         }
       </div>
     );
