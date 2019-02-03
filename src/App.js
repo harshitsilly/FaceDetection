@@ -5,6 +5,8 @@ import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import FaceRecognation from './components/FaceRecognation/FaceRecognation';
 import Rank from './components/Rank/Rank';
+import { css } from '@emotion/core';
+import { ClipLoader } from 'react-spinners';
 import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 import Particles from 'react-particles-js';
@@ -17,6 +19,7 @@ const initialState = {
   box: {},
   route: 'signin',
   isSignedIn: false,
+  loading: false,
   user: {
     id: '125',
     name: '',
@@ -30,6 +33,11 @@ const app = new Clarifai.App({
  apiKey: '27469a6f2bba40cd8f5abe881176b04d'
 });
 
+const override = css`
+    display: block;
+    margin: 0 auto;
+    border-color: red;
+`;
 const particlesOptions = {
   particles: {
     number: {
@@ -45,6 +53,7 @@ class App extends Component {
   constructor(){
     super();
     this.state = initialState;
+   
   }
   
   loadUser = (_user) =>{
@@ -80,6 +89,8 @@ class App extends Component {
     this.setState({imageUrl: input});
     const formData = new FormData();
     formData.append('file',input.files[0]);
+    this.setState ({
+      loading : true})
     fetch('/getLPBBImage', {
             method: 'post',
            
@@ -95,11 +106,17 @@ class App extends Component {
                  console.log(imgUrl)
                  container.src = imgUrl;
                 //  this.setState({box: outside});
+                this.setState ({
+                  loading : false})
               })
               
             } else {
+              this.setState ({
+                loading : false})
               throw new Error('ERROOOOOOOOOOOORRRRR');
             }
+          }).catch((error)=>{
+            throw new Error('ERROOOOOOOOOOOORRRRR');
           })
         
         
@@ -115,10 +132,18 @@ class App extends Component {
     this.setState({route: route});
   }
 
+  
   render() {
     const {isSignedIn, box, route, imageUrl, user} = this.state;
     return (
       <div className="App">
+      <ClipLoader
+          css={override}
+          sizeUnit={"px"}
+          size={150}
+          color={'#123abc'}
+          loading={this.state.loading}
+        />
         <Particles className = 'particles'
           params={particlesOptions}
         />
