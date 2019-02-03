@@ -72,40 +72,38 @@ class App extends Component {
     }
   }
   onInputChange = (event) => {
-    this.setState({input: event.target.value});
+    this.setState({input: event.target});
   }
 
   onPictureSubmit = () => {
     const {input} = this.state;
     this.setState({imageUrl: input});
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, input)
-      .then(response => {
-        if(response) {
-          fetch('http://localhost:3000/image', {
-            method: 'put',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              id: this.state.user.id
-            })
+    const formData = new FormData();
+    formData.append('file',input.files[0]);
+    fetch('/getLPBBImage', {
+            method: 'post',
+           
+            body: formData
           })
           .then(response => {
             if(response.status === 200) {
-              return response.json();
+              response.blob().then(images =>{
+                let container = document.getElementById('img');
+                // let imgElem = document.createElement('img');
+                // container.appendChild(imgElem);
+                let imgUrl = URL.createObjectURL(images)
+                 console.log(imgUrl)
+                 container.src = imgUrl;
+                //  this.setState({box: outside});
+              })
+              
             } else {
               throw new Error('ERROOOOOOOOOOOORRRRR');
             }
-          }).then(count => {
-            this.setState(Object.assign(this.state.user, {entries: count}));
           })
-          .catch(err => {
-            console.log(err);
-          })
-        }
-        this.setState({box: this.calculateFaceLocation(response)});
-      })
-      .catch(err => console.log(err));
+        
+        
+     
   }
 
   onRouteChange = (route) => {
@@ -131,10 +129,11 @@ class App extends Component {
         {route === 'home' 
           ? <div>
               <Logo/>
-              <Rank 
+              <img   alt="No Image" id="img"/> 
+              {/* <Rank 
                 name={this.state.user.name} 
                 entries={this.state.user.entries}
-              />
+              /> */}
               <ImageLinkForm 
                 onInputChange = {this.onInputChange} 
                 onPictureSubmit = {this.onPictureSubmit}

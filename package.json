@@ -6,10 +6,12 @@
     "clarifai": "^2.8.1",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
+    "react-html5-camera-photo": "^1.2.9",
     "react-particles-js": "^2.3.0",
     "react-scripts": "2.0.4",
     "react-tilt": "^0.1.4",
-    "tachyons": "^4.11.1"
+    "tachyons": "^4.11.1",
+    "tfjs": "^0.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -17,6 +19,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": "react-app"
   },

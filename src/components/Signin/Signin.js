@@ -17,7 +17,8 @@ class Signin extends Component {
 
   onSubmitSignIn = () => {
     console.log(this.state);
-    fetch('http://localhost:3000/signin', {
+    this.props.onRouteChange('home');
+    fetch('http://localhost:3002/signin', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -28,8 +29,11 @@ class Signin extends Component {
     .then(response => {
       if(response.status === 200){
         return (response.json());
+        this.props.onRouteChange('home');
       } else {
+        this.props.onRouteChange('home');
         throw new Error('Auth failed');
+        
       }
     }) 
     .then(user => {
